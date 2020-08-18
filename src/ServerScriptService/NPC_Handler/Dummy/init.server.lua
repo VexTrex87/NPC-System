@@ -158,6 +158,27 @@ local function Follow(NPC)
 	end
 end
 
+local function FindPoint(NPC)
+	local NewTarget
+	local LeastPopulatedPoint = math.huge
+	
+	if NPC.CurrentTarget then
+		NPC.CurrentTarget.Count.Value = NPC.CurrentTarget.Count.Value - 1
+	end
+		
+	for _,Point in pairs(workspace.Map.Points:GetChildren()) do
+		if Point.Count.Value < LeastPopulatedPoint then
+			LeastPopulatedPoint = Point.Count.Value
+			NewTarget = Point
+		end
+	end
+	
+	NPC.CurrentTarget = NewTarget
+	NewTarget.Count.Value = NewTarget.Count.Value + 1	
+	
+	return NewTarget.Position
+end
+
 local function FollowTarget(NPC)
 	
 	if not NPC or not NPC.Root then
@@ -165,9 +186,13 @@ local function FollowTarget(NPC)
 	end
 	
 	local Path = PathfindingService:CreatePath()  
-	Path:ComputeAsync(NPC.Root.Position, Target.PrimaryPart.Position)
+	Path:ComputeAsync(NPC.Root.Position, FindPoint(NPC))
 	local Hum = NPC.Hum
 	local Waypoints = Path:GetWaypoints()
+	
+	Path.Blocked:Connect(function()
+		Hum:MoveTo(NPC.Root.Position)
+	end)
 	
 	if Path.Status == Enum.PathStatus.Success then
 		for i,Point in ipairs(Waypoints) do	
@@ -189,7 +214,6 @@ local function FollowTarget(NPC)
 			
 			local Timeout = Hum.MoveToFinished:Wait()
 			if not Timeout then
-				Hum.Jump = true
 				FollowTarget(NPC)
 				break
 			end
@@ -200,7 +224,6 @@ local function FollowTarget(NPC)
 			
 		end	
 	else
-		warn("no path found")
 		FollowTarget(NPC)
 	end
 end
@@ -213,7 +236,8 @@ local function Initiate(TempChar)
 		Root = TempChar.HumanoidRootPart,
 		Hum = TempChar.Humanoid,
 		Target = nil,
-		PunchAnim = TempChar.Humanoid:LoadAnimation(script.Animations.Punch)
+		PunchAnim = TempChar.Humanoid:LoadAnimation(script.Animations.Punch),
+		CurrentTarget = nil
 	}		
 	table.insert(NPCs, NPC)
 	
@@ -273,22 +297,25 @@ local function Initiate(TempChar)
 	
 	-- Attacking event listener
 	local CanAttack = true
+	local CanTurn = true
 	NPC.Root.Touched:Connect(function(Obj)
-		if NPC.Target then
-			local p = game.Players:FindFirstChild(Obj.Parent.Name)
-			if NPC.Hum.Health ~= 0 and CanAttack and p then
-				CanAttack = false
-				Attack(NPC, p.Character)
-				wait(Settings.AttackDelay)
-				CanAttack = true
-			end
-		elseif Obj:FindFirstAncestor("Target") then
-			if CanAttack then
-				CanAttack = false
-				AttackTarget(NPC)
-				wait(Settings.AttackDelay)
-				CanAttack = true
-			end
+		if Obj.Parent ~= NPC.Char then
+			if NPC.Target then
+				local p = game.Players:FindFirstChild(Obj.Parent.Name)
+				if NPC.Hum.Health ~= 0 and CanAttack and p then
+					CanAttack = false
+					Attack(NPC, p.Character)
+					wait(Settings.AttackDelay)
+					CanAttack = true
+				end
+			elseif Obj:FindFirstAncestor("Target") then
+				if CanAttack then
+					CanAttack = false
+					AttackTarget(NPC)
+					wait(Settings.AttackDelay)
+					CanAttack = true
+				end
+			end		
 		end
 	end)	
 	
