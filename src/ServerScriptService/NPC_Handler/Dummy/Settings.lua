@@ -12,6 +12,10 @@ local Settings = {
 	TargetLineOfSightDist = 10,
 	PovIgnore = {},
 	
+	SpacingDist = 3,
+	WalkSpeed = 8,
+	AttemptSpacingDuration = 5,
+	
 	MinDamage = 10,
 	MaxDamage = 15,
 	AttackDelay = 2,

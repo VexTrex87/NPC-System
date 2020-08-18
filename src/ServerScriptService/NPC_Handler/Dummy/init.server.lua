@@ -24,11 +24,11 @@ end
 local function Mag(PointA, PointB)	
 	-- Helper function to get magnitude of two instances and/or positions
 	
-	if typeof(PointA) ~= Vector3 then 
+	if typeof(PointA) ~= "Vector3" then 
 		PointA = PointA.Position 
 	end
 	
-	if typeof(PointB) ~= Vector3 then 
+	if typeof(PointB) ~= "Vector3" then 
 		PointB = PointB.Position 
 	end
 	
@@ -67,6 +67,24 @@ local function CheckSight(NPC, Target, Dist)
 		end
 	end	
 
+end
+
+local function CheckFront(NPC)
+	local MyRay = Ray.new(NPC.Root.Position, NPC.Root.CFrame.lookVector * Settings.SpacingDist)
+	local Hit, Pos = workspace:FindPartOnRayWithIgnoreList(MyRay, {NPC.Char})
+	
+	if Hit and Hit:IsDescendantOf(workspace.NPC) and Mag(NPC.Root, Pos) < Settings.SpacingDist and Round(Hit.Velocity.Magnitude) > 0 then		
+		local PreviousSpeed = NPC.Hum.WalkSpeed		
+		NPC.Hum.WalkSpeed = Settings.WalkSpeed
+		
+		for x = 0, Settings.AttemptSpacingDuration, Settings.UpdateDelay do
+			wait(Settings.UpdateDelay)			
+			if not Hit or Mag(NPC.Root, Pos) < Settings.SpacingDist or Round(Hit.Velocity.Magnitude) > 0 then
+				NPC.Hum.WalkSpeed = PreviousSpeed
+				break
+			end
+		end				
+	end	
 end
 
 	-- AI: Helper
@@ -144,7 +162,8 @@ local function Follow(NPC)
 		for i,Point in ipairs(Waypoints) do	
 			
 			-- Jumps if needed, moves to point, restarts function if needed		
-			Jump(NPC, Point)					
+			Jump(NPC, Point)		
+			CheckFront(NPC)			
 			Hum:MoveTo(Point.Position)
 			
 			local Timeout = Hum.MoveToFinished:Wait()
@@ -156,6 +175,7 @@ local function Follow(NPC)
 
 			if NPC and NPC.Root and NPC.Target and CheckSight(NPC, NPC.Target) then
 				repeat
+					CheckFront(NPC)
 					Hum:MoveTo(CurrentTarget.Position)
 					wait(Settings.UpdateDelay)
 				until not NPC.Target or not NPC.Root or CurrentTarget ~= NPC.Target or not CheckSight(NPC, NPC.Target) or Hum.Health == 0 or NPC.Target.Parent.Humanoid.Health == 0
@@ -272,8 +292,21 @@ local function Initiate(TempChar)
 		NPC.Hum[Name] = Val
 	end
 	
+	------------------------------------
+	------------------------------------
+	local Clone = NPC.Char:Clone()
+	------------------------------------
+	------------------------------------	
+	
 	-- Character died: Removes NPC from table, plays death sound, ragdoll, and destroys
 	NPC.Hum.Died:Connect(function()
+		
+		------------------------------------
+		------------------------------------
+		Clone.Parent = workspace.NPC
+		------------------------------------
+		------------------------------------		
+		
 		table.remove(NPCs, table.find(NPCs, NPC))
 		
 		NPC.Root.Died.PlaybackSpeed = math.random(Settings.Sounds.DeathSpeed_Min*100, Settings.Sounds.DeathSpeed_Max*100)/100
