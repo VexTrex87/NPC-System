@@ -1,15 +1,25 @@
 -- // Variables \\ --
 
+	-- Services
 local CollectionService = game:GetService("CollectionService")
 local PathfindingService = game:GetService("PathfindingService")
+
+	-- Modules
 local Settings = require(script.Settings)
-local Helper = require(game.ServerScriptService.Helper)
+local NewThread = require(game.ServerScriptService.NewThread)
+
+	-- Instances
 local Target = workspace.Map.Target
+
+	-- Script
 local NPCs = {}
 
 -- // Functions \\ --
 
 	-- Helpers
+local function Round(n)
+	return math.floor(n + 0.5)
+end
 
 local function Mag(PointA, PointB)	
 	-- Helper function to get magnitude of two instances and/or positions
@@ -49,7 +59,7 @@ local function CheckSight(NPC, Target, Dist)
 	end
 	
 	local NewRay = Ray.new(NPC.Root.Position, (Target.Position - NPC.Root.Position).Unit * Dist)
-	local Hit, Pos = workspace:FindPartOnRayWithIgnoreList(NewRay, PovIgnore)
+	local Hit = workspace:FindPartOnRayWithIgnoreList(NewRay, PovIgnore)
 	
 	if Hit then
 		if Hit:IsDescendantOf(Target.Parent) and math.abs(Hit.Position.Y - NPC.Root.Position.Y) <= Settings.PovY then
@@ -59,7 +69,7 @@ local function CheckSight(NPC, Target, Dist)
 
 end
 
-	-- AI
+	-- AI: Helper
 local function Ragdoll(Char)
 	-- Replaces all Motor6D's with BallSocketsConstraints
 	
@@ -93,20 +103,6 @@ local function Ragdoll(Char)
 	end	
 end
 
-local function Attack(NPC, Char)
-	-- Plays animation, sound, and deals damage to target
-	NPC.PunchAnim:Play()
-	NPC.Root.Punch:Play()
-	Char.Humanoid:TakeDamage(math.random(Settings.MinDamage, Settings.MaxDamage))
-end
-
-local function AttackTarget(NPC)
-	-- Plays animation, sound, and deals damage to target
-	NPC.PunchAnim:Play()
-	NPC.Root.Punch:Play()
-	Target.Health.Value = Target.Health.Value - math.random(Settings.MinDamage, Settings.MaxDamage)
-end
-
 local function Jump(NPC, Point)
 	-- Jumps if the point requires a jump or the move to position is higher than the NPC's position
 	
@@ -116,12 +112,20 @@ local function Jump(NPC, Point)
 		Hum.Jump = true
 	end
 								
-	Helper.NewThread(function()
+	NewThread(function()
 		wait(Settings.JumpDelay)
-		if Helper.Round(Hum.WalkToPoint.Y) > Helper.Round(NPC.Root.Position.Y) then
+		if Round(Hum.WalkToPoint.Y) > Round(NPC.Root.Position.Y) then
 			Hum.Jump = true
 		end
 	end)	
+end
+
+	-- AI: Players
+local function Attack(NPC, Char)
+	-- Plays animation, sound, and deals damage to target
+	NPC.PunchAnim:Play()
+	NPC.Root.Punch:Play()
+	Char.Humanoid:TakeDamage(math.random(Settings.MinDamage, Settings.MaxDamage))
 end
 
 local function Follow(NPC)
@@ -154,7 +158,7 @@ local function Follow(NPC)
 				repeat
 					Hum:MoveTo(CurrentTarget.Position)
 					wait(Settings.UpdateDelay)
-				until not NPC.Target or not NPC.Root or not NPC.Target or CurrentTarget ~= NPC.Target or not CheckSight(NPC, NPC.Target) or Hum.Health == 0 or NPC.Target.Parent.Humanoid.Health == 0
+				until not NPC.Target or not NPC.Root or CurrentTarget ~= NPC.Target or not CheckSight(NPC, NPC.Target) or Hum.Health == 0 or NPC.Target.Parent.Humanoid.Health == 0
 				break
 			end			
 			
@@ -169,6 +173,14 @@ local function Follow(NPC)
 	else
 		Follow(NPC)
 	end
+end
+
+	-- AI: Non-Humanoid Target
+local function AttackTarget(NPC)
+	-- Plays animation, sound, and deals damage to target
+	NPC.PunchAnim:Play()
+	NPC.Root.Punch:Play()
+	Target.Health.Value = Target.Health.Value - math.random(Settings.MinDamage, Settings.MaxDamage)
 end
 
 local function FindPoint(NPC)
@@ -203,7 +215,6 @@ local function FollowTarget(NPC)
 	local Path = PathfindingService:CreatePath()  
 	Path:ComputeAsync(NPC.Root.Position, FindPoint(NPC))
 	local Hum = NPC.Hum
-	local Waypoints = Path:GetWaypoints()
 	
 	local PathBlocked
 	PathBlocked = Path.Blocked:Connect(function()
@@ -211,7 +222,7 @@ local function FollowTarget(NPC)
 	end)
 	
 	if Path.Status == Enum.PathStatus.Success then
-		for i,Point in ipairs(Waypoints) do	
+		for i,Point in ipairs(Path:GetWaypoints()) do	
 			
 			-- Jumps if needed, moves to point, restarts function if doesn't reach point in 8 sec (default humanoid timeout)
 			Jump(NPC, Point)
@@ -224,7 +235,8 @@ local function FollowTarget(NPC)
 				break
 			end			
 			
-			if NPC and NPC.Root and CheckSight(NPC, Target.Center, 10) then
+			-- If the NPC is close to the non-humanoid target, it will look at it
+			if NPC and NPC.Root and CheckSight(NPC, Target.Center, Settings.TargetLineOfSightDist) then
 				NPC.Root.CFrame = CFrame.new(NPC.Root.Position, Target.Center.Position)
 			end					
 			
@@ -241,6 +253,7 @@ local function FollowTarget(NPC)
 	end
 end
 
+	-- AI: Main
 local function Initiate(TempChar)
 	
 	-- Local table for NPC's
@@ -299,7 +312,8 @@ local function Initiate(TempChar)
 	
 	-- Attacking event listener
 	local CanAttack = true
-	NPC.Char.LeftHand.Touched:Connect(function(Obj)
+	
+	local function CheckToAttack(Obj, NPC)
 		if Obj.Parent ~= NPC.Char and NPC.Target then
 			local p = game.Players:FindFirstChild(Obj.Parent.Name)
 			if NPC.Hum.Health ~= 0 and CanAttack and p then
@@ -315,27 +329,16 @@ local function Initiate(TempChar)
 				wait(Settings.AttackDelay)
 				CanAttack = true
 			end
-		end		
-	end)	
+		end			
+	end
+	
+	NPC.Char.LeftHand.Touched:Connect(function(Obj)
+		CheckToAttack(Obj, NPC)
+	end)
 	
 	NPC.Char.RightHand.Touched:Connect(function(Obj)
-		if Obj.Parent ~= NPC.Char and NPC.Target then
-			local p = game.Players:FindFirstChild(Obj.Parent.Name)
-			if NPC.Hum.Health ~= 0 and CanAttack and p then
-				CanAttack = false
-				Attack(NPC, p.Character)
-				wait(Settings.AttackDelay)
-				CanAttack = true
-			end
-		elseif Obj.Parent ~= NPC.Char and Obj:FindFirstAncestor("Target") then
-			if CanAttack then
-				CanAttack = false
-				AttackTarget(NPC)
-				wait(Settings.AttackDelay)
-				CanAttack = true
-			end
-		end		
-	end)	
+		CheckToAttack(Obj, NPC)
+	end)
 	
 	-- Punch Sounds
 	local Sounds = script.PunchSounds:GetChildren()	
@@ -356,8 +359,7 @@ local function Initiate(TempChar)
 	
 end
 
-	-- Locate
-Helper.NewThread(function()
+NewThread(function() -- Locate
 	while wait(Settings.UpdateDelay) do		
 		for _,NPC in pairs(NPCs) do		
 			
@@ -403,10 +405,10 @@ end)
 
 -- // Defaults \\ --
 
-for _,Char in pairs(CollectionService:GetTagged("Dummy")) do
-	Helper.NewThread(Initiate, Char)
+for _,Char in pairs(CollectionService:GetTagged(script.Name)) do
+	NewThread(Initiate, Char)
 end
 
-CollectionService:GetInstanceAddedSignal("Dummy"):Connect(function(Char)
-	Helper.NewThread(Initiate, Char)
+CollectionService:GetInstanceAddedSignal(script.Name):Connect(function(Char)
+	NewThread(Initiate, Char)
 end)

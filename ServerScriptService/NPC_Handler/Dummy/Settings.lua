@@ -6,15 +6,15 @@ local Settings = {
 	
 	DetectionDist = 50,
 	PovX = 0.4,
-	PovY = 5,	
+	PovY = 5,
 	TimeoutDist = 20,
 	LineOfSightDist = 40,
+	TargetLineOfSightDist = 10,
 	PovIgnore = {},
 	
 	MinDamage = 10,
 	MaxDamage = 15,
 	AttackDelay = 2,
-	AttackDist = 3,		
 	
 	Sounds = {
 		DeathSpeed_Min = 0.9,

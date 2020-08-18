@@ -36,5 +36,6 @@ while wait(UPDATE_DELAY) do
 		script.Parent.Text = "FPS: " .. FPS .. "   PING: " .. Ping .. " ms   NPC's: " .. Count .. "   PARTS: " .. Parts	 .. "   OTHER THREADS: " .. Threads		
 	else
 		script.Parent.TextColor3 = ERROR_COLOR
+		script.Parent.Text = "FPS: N/A   PING: N/A   NPC's: N/A   PARTS: N/A   OTHER THREADS: N/A"
 	end	
 end

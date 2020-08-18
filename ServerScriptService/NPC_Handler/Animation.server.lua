@@ -6,12 +6,12 @@ local NPC_TAG = "NPC"
 -- // Variables \\ --
 
 local CollectionService = game:GetService("CollectionService")
-local Helper = require(game.ServerScriptService.Helper)
+local NewThread = require(game.ServerScriptService.NewThread)
 
 -- // Functions \\ --
 
 local function Animate(Char)
-	local Hum = Char:WaitForChild("Humanoid")
+	local Hum = Char.Humanoid
 	local Anims = {}
 	
 	-- Disables unnecessary states for more performance
@@ -24,6 +24,7 @@ local function Animate(Char)
 		Anims[Anim.Name] = Hum:LoadAnimation(Anim[math.random(1, #Anim:GetChildren())])
 	end
 	
+	-- Events for default animations to run
 	Hum.Running:Connect(function(Speed)
 		if Speed ~= 0 then
 			Anims.Idle:Stop()
@@ -55,9 +56,9 @@ end
 -- // Main \\ --
 
 for _,Char in pairs(CollectionService:GetTagged(NPC_TAG)) do
-	Helper.NewThread(Animate, Char)
+	NewThread(Animate, Char)
 end
 
 CollectionService:GetInstanceAddedSignal(NPC_TAG):Connect(function(Char)
-	Helper.NewThread(Animate, Char)
+	NewThread(Animate, Char)
 end)

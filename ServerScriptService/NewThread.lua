@@ -1,7 +1,6 @@
-local Helper = {}
 local ThreadValue = game.ReplicatedStorage.Threads
 
-Helper.NewThread = function(func,...)
+NewThread = function(func,...)
 	ThreadValue.Value = ThreadValue.Value + 1
 	
 	local a = coroutine.wrap(function(...)
@@ -12,8 +11,4 @@ Helper.NewThread = function(func,...)
 	a(...)	
 end
 
-Helper.Round = function(n)
-	return math.floor(n + 0.5)
-end
-
-return Helper
+return NewThread

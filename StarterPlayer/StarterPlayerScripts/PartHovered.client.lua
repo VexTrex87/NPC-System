@@ -1,5 +1,4 @@
-local p = game.Players.LocalPlayer
-local Mouse = p:GetMouse()
+local Mouse = game.Players.LocalPlayer:GetMouse()
 local PreviousFrame
 
 Mouse.Move:Connect(function()	
