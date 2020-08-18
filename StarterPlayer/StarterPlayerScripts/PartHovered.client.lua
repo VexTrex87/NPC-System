@@ -2,8 +2,7 @@ local p = game.Players.LocalPlayer
 local Mouse = p:GetMouse()
 local PreviousFrame
 
-Mouse.Move:Connect(function()
-	
+Mouse.Move:Connect(function()	
 	local Target = Mouse.Target
 	
 	if Target and Target.Parent ~= PreviousFrame and PreviousFrame then

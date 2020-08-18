@@ -6,15 +6,9 @@ local NPC_TAG = "NPC"
 -- // Variables \\ --
 
 local CollectionService = game:GetService("CollectionService")
+local Helper = require(game.ServerScriptService.Helper)
 
 -- // Functions \\ --
-
-local function NewThread(func,...)
-	-- Helper function to create multiple threads
-	
-	local Thread = coroutine.wrap(func)
-	Thread(...)	
-end
 
 local function Animate(Char)
 	local Hum = Char:WaitForChild("Humanoid")
@@ -61,9 +55,9 @@ end
 -- // Main \\ --
 
 for _,Char in pairs(CollectionService:GetTagged(NPC_TAG)) do
-	NewThread(Animate, Char)
+	Helper.NewThread(Animate, Char)
 end
 
 CollectionService:GetInstanceAddedSignal(NPC_TAG):Connect(function(Char)
-	NewThread(Animate, Char)
+	Helper.NewThread(Animate, Char)
 end)

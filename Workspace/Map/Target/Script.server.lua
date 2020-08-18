@@ -20,7 +20,14 @@ Frame.Label.Text = Health.Value .. "/" .. MaxHealth.Value
 
 Health.Changed:Connect(function(Val)		
 	if Val < 0 then
-		script.DefeatSound:Play()
+		
+		local a = coroutine.wrap(function()
+			script.DefeatSound:Play()
+			wait(5)
+			script.DefeatSound:Pause()
+		end)
+		a()
+		
 		Val = 0
 	end
 		
@@ -42,9 +49,6 @@ Health.Changed:Connect(function(Val)
 	
 	if Val == 0 then
 		Health.Value = MaxHealth.Value
-	end
-	
-	wait(5)
-	script.DefeatSound:Pause()
-	
+	end	
+		
 end)	

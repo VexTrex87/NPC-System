@@ -4,15 +4,16 @@ local Settings = {
 	JumpDelay = 1,
 	DespawnDelay = 3,
 	
-	DetectionDist = 80,
+	DetectionDist = 50,
 	PovX = 0.4,
 	PovY = 5,	
 	TimeoutDist = 20,
+	LineOfSightDist = 40,
 	PovIgnore = {},
 	
 	MinDamage = 10,
 	MaxDamage = 15,
-	AttackDelay = 1,
+	AttackDelay = 2,
 	AttackDist = 3,		
 	
 	Sounds = {

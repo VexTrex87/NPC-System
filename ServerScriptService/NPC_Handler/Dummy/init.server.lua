@@ -3,22 +3,13 @@
 local CollectionService = game:GetService("CollectionService")
 local PathfindingService = game:GetService("PathfindingService")
 local Settings = require(script.Settings)
+local Helper = require(game.ServerScriptService.Helper)
 local Target = workspace.Map.Target
 local NPCs = {}
 
 -- // Functions \\ --
 
 	-- Helpers
-local function NewThread(func,...)
-	-- Helper function to create multiple threads	
-	local Thread = coroutine.wrap(func)
-	Thread(...)	
-end
-
-local function Round(n)
-	-- Helper function to round numbers
-	return math.floor(n + 0.5)
-end
 
 local function Mag(PointA, PointB)	
 	-- Helper function to get magnitude of two instances and/or positions
@@ -47,13 +38,17 @@ local function CheckPov(NPC, Target)
 
 end
 
-local function CheckSight(NPC, Target)
+local function CheckSight(NPC, Target, Dist)
 	-- Uses rays to check if the target is in its direct line of sight
 	
 	local PovIgnore = Settings.PovIgnore
 	table.insert(PovIgnore, NPC.Char)
 	
-	local NewRay = Ray.new(NPC.Root.Position, (Target.Position - NPC.Root.Position).Unit * 40)
+	if not Dist then
+		Dist = Settings.LineOfSightDist
+	end
+	
+	local NewRay = Ray.new(NPC.Root.Position, (Target.Position - NPC.Root.Position).Unit * Dist)
 	local Hit, Pos = workspace:FindPartOnRayWithIgnoreList(NewRay, PovIgnore)
 	
 	if Hit then
@@ -61,6 +56,7 @@ local function CheckSight(NPC, Target)
 			return true
 		end
 	end	
+
 end
 
 	-- AI
@@ -120,10 +116,10 @@ local function Jump(NPC, Point)
 		Hum.Jump = true
 	end
 								
-	NewThread(function()
+	Helper.NewThread(function()
 		wait(Settings.JumpDelay)
-		if Round(Hum.WalkToPoint.Y) > Round(NPC.Root.Position.Y) then
-		Hum.Jump = true
+		if Helper.Round(Hum.WalkToPoint.Y) > Helper.Round(NPC.Root.Position.Y) then
+			Hum.Jump = true
 		end
 	end)	
 end
@@ -153,7 +149,7 @@ local function Follow(NPC)
 				Follow(NPC)
 				break
 			end
-			
+
 			if NPC and NPC.Root and NPC.Target and CheckSight(NPC, NPC.Target) then
 				repeat
 					Hum:MoveTo(CurrentTarget.Position)
@@ -209,7 +205,8 @@ local function FollowTarget(NPC)
 	local Hum = NPC.Hum
 	local Waypoints = Path:GetWaypoints()
 	
-	Path.Blocked:Connect(function()
+	local PathBlocked
+	PathBlocked = Path.Blocked:Connect(function()
 		Hum:MoveTo(NPC.Root.Position)
 	end)
 	
@@ -222,16 +219,24 @@ local function FollowTarget(NPC)
 			
 			local Timeout = Hum.MoveToFinished:Wait()
 			if not Timeout then
+				PathBlocked:Disconect()
 				FollowTarget(NPC)
 				break
-			end
+			end			
+			
+			if NPC and NPC.Root and CheckSight(NPC, Target.Center, 10) then
+				NPC.Root.CFrame = CFrame.new(NPC.Root.Position, Target.Center.Position)
+			end					
 			
 			if NPC.Target then
+				PathBlocked:Disconnect()
 				break
 			end				
 			
+			PathBlocked:Disconnect()
 		end	
 	else
+		PathBlocked:Disconnect()
 		FollowTarget(NPC)
 	end
 end
@@ -265,7 +270,6 @@ local function Initiate(TempChar)
 		Ragdoll(NPC.Char)			
 		wait(Settings.DespawnDelay)		
 		NPC.Char:Destroy()
-	
 	end)	
 	
 	-- Health bar
@@ -295,7 +299,26 @@ local function Initiate(TempChar)
 	
 	-- Attacking event listener
 	local CanAttack = true
-	NPC.Root.Touched:Connect(function(Obj)
+	NPC.Char.LeftHand.Touched:Connect(function(Obj)
+		if Obj.Parent ~= NPC.Char and NPC.Target then
+			local p = game.Players:FindFirstChild(Obj.Parent.Name)
+			if NPC.Hum.Health ~= 0 and CanAttack and p then
+				CanAttack = false
+				Attack(NPC, p.Character)
+				wait(Settings.AttackDelay)
+				CanAttack = true
+			end
+		elseif Obj.Parent ~= NPC.Char and Obj:FindFirstAncestor("Target") then
+			if CanAttack then
+				CanAttack = false
+				AttackTarget(NPC)
+				wait(Settings.AttackDelay)
+				CanAttack = true
+			end
+		end		
+	end)	
+	
+	NPC.Char.RightHand.Touched:Connect(function(Obj)
 		if Obj.Parent ~= NPC.Char and NPC.Target then
 			local p = game.Players:FindFirstChild(Obj.Parent.Name)
 			if NPC.Hum.Health ~= 0 and CanAttack and p then
@@ -334,7 +357,7 @@ local function Initiate(TempChar)
 end
 
 	-- Locate
-NewThread(function()
+Helper.NewThread(function()
 	while wait(Settings.UpdateDelay) do		
 		for _,NPC in pairs(NPCs) do		
 			
@@ -381,9 +404,9 @@ end)
 -- // Defaults \\ --
 
 for _,Char in pairs(CollectionService:GetTagged("Dummy")) do
-	NewThread(Initiate, Char)
+	Helper.NewThread(Initiate, Char)
 end
 
 CollectionService:GetInstanceAddedSignal("Dummy"):Connect(function(Char)
-	NewThread(Initiate, Char)
+	Helper.NewThread(Initiate, Char)
 end)
