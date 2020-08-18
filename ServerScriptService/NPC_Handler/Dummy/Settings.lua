@@ -1,6 +1,6 @@
 local Settings = {	
 	
-	UpdateDelay = 0.5,	
+	UpdateDelay = 0.1,	
 	JumpDelay = 1,
 	DespawnDelay = 3,
 	

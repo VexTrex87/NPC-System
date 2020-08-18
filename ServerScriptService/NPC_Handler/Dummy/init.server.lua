@@ -230,7 +230,7 @@ local function FollowTarget(NPC)
 			
 			local Timeout = Hum.MoveToFinished:Wait()
 			if not Timeout then
-				PathBlocked:Disconect()
+				PathBlocked:Disconnect()
 				FollowTarget(NPC)
 				break
 			end			
