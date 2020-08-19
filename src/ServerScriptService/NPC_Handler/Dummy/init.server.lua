@@ -6,7 +6,7 @@ local PathfindingService = game:GetService("PathfindingService")
 
 	-- Modules
 local Settings = require(script.Settings)
-local NewThread = require(game.ServerScriptService.NewThread)
+local Core = require(game.ServerScriptService.Core)
 
 	-- Instances
 local Target = workspace.Map.Target
@@ -17,23 +17,6 @@ local NPCs = {}
 -- // Functions \\ --
 
 	-- Helpers
-local function Round(n)
-	return math.floor(n + 0.5)
-end
-
-local function Mag(PointA, PointB)	
-	-- Helper function to get magnitude of two instances and/or positions
-	
-	if typeof(PointA) ~= "Vector3" then 
-		PointA = PointA.Position 
-	end
-	
-	if typeof(PointB) ~= "Vector3" then 
-		PointB = PointB.Position 
-	end
-	
-	return (PointA - PointB).Magnitude 
-end
 
 local function CheckPov(NPC, Target)
 	-- Uses dot product to check if the target is within its perspective
@@ -73,13 +56,13 @@ local function CheckFront(NPC)
 	local MyRay = Ray.new(NPC.Root.Position, NPC.Root.CFrame.lookVector * Settings.SpacingDist)
 	local Hit, Pos = workspace:FindPartOnRayWithIgnoreList(MyRay, {NPC.Char})
 	
-	if Hit and Hit:IsDescendantOf(workspace.NPC) and Mag(NPC.Root, Pos) < Settings.SpacingDist and Round(Hit.Velocity.Magnitude) > 0 then		
+	if Hit and Hit:IsDescendantOf(workspace.NPC) and Core.Mag(NPC.Root, Pos) < Settings.SpacingDist and Core.Round(Hit.Velocity.Magnitude) > 0 then		
 		local PreviousSpeed = NPC.Hum.WalkSpeed		
 		NPC.Hum.WalkSpeed = Settings.WalkSpeed
 		
 		for x = 0, Settings.AttemptSpacingDuration, Settings.UpdateDelay do
 			wait(Settings.UpdateDelay)			
-			if not Hit or Mag(NPC.Root, Pos) < Settings.SpacingDist or Round(Hit.Velocity.Magnitude) > 0 then
+			if not Hit or Core.Mag(NPC.Root, Pos) < Settings.SpacingDist or Core.Round(Hit.Velocity.Magnitude) > 0 then
 				NPC.Hum.WalkSpeed = PreviousSpeed
 				break
 			end
@@ -130,9 +113,9 @@ local function Jump(NPC, Point)
 		Hum.Jump = true
 	end
 								
-	NewThread(function()
+	Core.NewThread(function()
 		wait(Settings.JumpDelay)
-		if Round(Hum.WalkToPoint.Y) > Round(NPC.Root.Position.Y) then
+		if Core.Round(Hum.WalkToPoint.Y) > Core.Round(NPC.Root.Position.Y) then
 			Hum.Jump = true
 		end
 	end)	
@@ -184,7 +167,7 @@ local function Follow(NPC)
 			
 			if not NPC.Target then
 				break
-			elseif Mag(NPC.Target, Waypoints[#Waypoints]) > Settings.TimeoutDist or CurrentTarget ~= NPC.Target then
+			elseif Core.Mag(NPC.Target, Waypoints[#Waypoints]) > Settings.TimeoutDist or CurrentTarget ~= NPC.Target then
 				Follow(NPC)
 				break
 			end				
@@ -392,7 +375,7 @@ local function Initiate(TempChar)
 	
 end
 
-NewThread(function() -- Locate
+Core.NewThread(function() -- Locate
 	while wait(Settings.UpdateDelay) do		
 		for _,NPC in pairs(NPCs) do		
 			
@@ -405,7 +388,7 @@ NewThread(function() -- Locate
 				if Char then
 					local Root = Char:FindFirstChild("HumanoidRootPart")
 					if Root then
-						local CurrentDist = Mag(Root, NPC.Root)
+						local CurrentDist = Core.Mag(Root, NPC.Root)
 						if Char.Humanoid.Health > 0 and CurrentDist < Dist then
 							table.insert(Pot, Root)
 						end
@@ -424,7 +407,7 @@ NewThread(function() -- Locate
 			
 			-- Prioritizes those closest to it
 			for i,v in ipairs(See) do
-				local TempDist = Mag(NPC.Root, v)
+				local TempDist = Core.Mag(NPC.Root, v)
 				if TempDist < Dist then
 					Dist = TempDist
 					Target = v
@@ -439,9 +422,9 @@ end)
 -- // Defaults \\ --
 
 for _,Char in pairs(CollectionService:GetTagged(script.Name)) do
-	NewThread(Initiate, Char)
+	Core.NewThread(Initiate, Char)
 end
 
 CollectionService:GetInstanceAddedSignal(script.Name):Connect(function(Char)
-	NewThread(Initiate, Char)
+	Core.NewThread(Initiate, Char)
 end)

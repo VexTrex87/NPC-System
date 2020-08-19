@@ -1,13 +1,13 @@
 -- // Settings \\ --
 
-local UPDATE_DELAY = 1
+local UPDATE_DELAY = 0.5
 local SUCCESS_COLOR = Color3.fromRGB(255, 255, 255)
 local ERROR_COLOR = Color3.fromRGB(255, 0, 0)
 
 -- // Variables \\ --
 
-local PingRemote = game.ReplicatedStorage.Ping
-local ThreadValue = game.ReplicatedStorage.Threads
+local PingRemote = game.ReplicatedStorage.Remotes.Ping
+local ThreadValue = game.ReplicatedStorage.Values.Threads
 
 -- // Main \\ --
 

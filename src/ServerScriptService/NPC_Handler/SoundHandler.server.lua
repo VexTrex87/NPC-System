@@ -14,7 +14,9 @@ end
 
 local function AddSound(Char)
 	local Root = Char.HumanoidRootPart
-	NewSound("Died", Root)
+	if table.find({"Dummy"}, Char.Name) then
+		NewSound("Died", Root)
+	end
 end
 
 -- // Main \\ --
