@@ -327,8 +327,7 @@ local function Initiate(TempChar)
 	end	
 	
 	-- Attacking event listener
-	local CanAttack = true
-	
+	local CanAttack = true	
 	local function CheckToAttack(Obj, NPC)
 		if Obj.Parent ~= NPC.Char and NPC.Target then
 			local p = game.Players:FindFirstChild(Obj.Parent.Name)

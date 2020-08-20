@@ -188,80 +188,6 @@ local function Follow(NPC)
 	end
 end
 
-	-- AI: Non-Humanoid Target
-
-local function FindPoint(NPC)
-	-- Finds the point in the map with the least amount of NPC's at it
-	
-	local NewTarget
-	local LeastPopulatedPoint = math.huge
-	
-	if NPC.CurrentTarget then
-		NPC.CurrentTarget.Count.Value = NPC.CurrentTarget.Count.Value - 1
-	end
-		
-	for _,Point in pairs(workspace.Map.Points:GetChildren()) do
-		if Point.Count.Value < LeastPopulatedPoint then
-			LeastPopulatedPoint = Point.Count.Value
-			NewTarget = Point
-		end
-	end
-	
-	NPC.CurrentTarget = NewTarget
-	NewTarget.Count.Value = NewTarget.Count.Value + 1	
-	
-	return NewTarget.Position
-end
-
-local function FollowTarget(NPC)
-	
-	if not NPC or not NPC.Root then
-		return
-	end
-	
-	local Path = PathfindingService:CreatePath()  
-	Path:ComputeAsync(NPC.Root.Position, FindPoint(NPC))
-	local Hum = NPC.Hum
-	
-	local PathBlocked
-	PathBlocked = Path.Blocked:Connect(function()
-		Hum:MoveTo(NPC.Root.Position)
-	end)
-	
-	if Path.Status == Enum.PathStatus.Success then
-		for i,Point in ipairs(Path:GetWaypoints()) do	
-			
-			-- Jumps if needed, moves to point, restarts function if doesn't reach point in 8 sec (default humanoid timeout)
-			Jump(NPC, Point)
-			Hum:MoveTo(Point.Position)		
-			
-			local Timeout = Hum.MoveToFinished:Wait()
-			if not Timeout then
-				PathBlocked:Disconnect()
-				FollowTarget(NPC)
-				break
-			end			
-			
-			-- If the NPC is close to the non-humanoid target, it will look at it
-			if NPC and NPC.Root and CheckSight(NPC, Target.Center, Settings.TargetLineOfSightDist) and NPC.CurrentTarget and Core.Mag(NPC.Root, NPC.CurrentTarget) < Settings.PointDist then				
-				local Tween = TweenService:Create(NPC.Root, TweenInfo.new(Settings.TurnDuration), {CFrame = CFrame.new(NPC.Root.Position, Target.Center.Position)})
-				Tween:Play()
-				Tween.Completed:Wait()
-			end					
-			
-			if NPC.Target then
-				PathBlocked:Disconnect()
-				break
-			end				
-			
-			PathBlocked:Disconnect()
-		end	
-	else
-		PathBlocked:Disconnect()
-		FollowTarget(NPC)
-	end
-end
-
 	-- AI: Main
 local function Initiate(TempChar)
 	
@@ -333,8 +259,8 @@ local function Initiate(TempChar)
 			break
 		elseif NPC.Target then
 			Follow(NPC)
-		elseif not NPC.CurrentTarget or NPC.CurrentTarget and Core.Mag(NPC.Root, NPC.CurrentTarget) > Settings.PointDist then
-			FollowTarget(NPC)						
+		else
+			wait(1)			
 		end
 	end
 	
