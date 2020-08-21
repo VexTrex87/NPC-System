@@ -4,137 +4,37 @@ local CollectionService = game:GetService("CollectionService")
 local PathfindingService = game:GetService("PathfindingService")
 local TweenService = game:GetService("TweenService")
 
+local NpcModule = require(script.Parent.NPC)
 local Settings = require(script.Settings)
 local Core = require(game.ServerScriptService.Core)
 local Explode = require(script.Explode)
 
 local Target = workspace.Map.Target
-
 local NPCs = {}
 
 -- // Functions \\ --
 
-	-- Helpers
+-- AI: Players
 
-local function CheckPov(NPC, Target)
-	-- Uses dot product to check if the target is within its perspective
-	
-	local NpcToChar = (NPC.Char.Head.Position - Target.Parent.Head.Position).Unit
-	local NpcLook = NPC.Char.Head.CFrame.LookVector
-	local DotProduct = NpcToChar:Dot(NpcLook)
-	
-	if DotProduct >= Settings.PovX then
-		return true
-	end
-
-end
-
-local function CheckSight(NPC, Target, Dist)
-	-- Uses rays to check if the target is in its direct line of sight
-	
-	local PovIgnore = Settings.PovIgnore
-	table.insert(PovIgnore, NPC.Char)
-	
-	if not Dist then
-		Dist = Settings.LineOfSightDist
-	end
-	
-	local NewRay = Ray.new(NPC.Root.Position, (Target.Position - NPC.Root.Position).Unit * Dist)
-	local Hit = workspace:FindPartOnRayWithIgnoreList(NewRay, PovIgnore)
-	
-	if Hit then
-		if Hit:IsDescendantOf(Target.Parent) and math.abs(Hit.Position.Y - NPC.Root.Position.Y) <= Settings.PovY then
-			return true
-		end
-	end	
-
-end
-
-local function CheckFront(NPC)
-	local MyRay = Ray.new(NPC.Root.Position, NPC.Root.CFrame.lookVector * Settings.SpacingDist)
-	local Hit, Pos = workspace:FindPartOnRayWithIgnoreList(MyRay, {NPC.Char})
-	
-	if Hit and Hit:IsDescendantOf(workspace.NPC) and Core.Mag(NPC.Root, Pos) < Settings.SpacingDist and Core.Round(Hit.Velocity.Magnitude) > 0 then		
-		local PreviousSpeed = NPC.Hum.WalkSpeed		
-		NPC.Hum.WalkSpeed = Settings.WalkSpeed
+local function InitiateExplode(NPC)
+	NPC.ExplodeAnim:Play()
 		
-		for x = 0, Settings.AttemptSpacingDuration, Settings.UpdateDelay do
-			wait(Settings.UpdateDelay)			
-			if not Hit or Core.Mag(NPC.Root, Pos) < Settings.SpacingDist or Core.Round(Hit.Velocity.Magnitude) > 0 then
-				NPC.Hum.WalkSpeed = PreviousSpeed
-				break
-			end
-		end				
-	end	
+	local Con
+	Con = NPC.ExplodeAnim:GetMarkerReachedSignal("StartExplosion"):Connect(function()
+		Explode.Start({
+			["Position"] = NPC.Root.Position,
+			["NPC"] = NPC.Char
+		})
+		Con:Disconnect()
+	end)
+		
+	NPC.ExplodeAnim.Stopped:Wait()		
 end
 
-	-- AI: Helper
-local function Ragdoll(Char)
-	-- Replaces all Motor6D's with BallSocketsConstraints
-	
-	Char.HumanoidRootPart.Anchored = true
-	Char.HumanoidRootPart.CanCollide = false
-	Char.HumanoidRootPart:BreakJoints()
-			
-	for _,desc in pairs(Char:GetDescendants()) do
-		if (desc:IsA("Motor6D") and Settings.JointConfiguration[desc.Name]) then
-			local Joint = Instance.new(Settings.JointConfiguration[desc.Name][1] .. "Constraint")
-			local Attachment0 = desc.Parent:FindFirstChild(desc.Name .. "Attachment") or desc.Parent:FindFirstChild(desc.Name .. "RigAttachment")
-			local Attachment1 = desc.Part0:FindFirstChild(desc.Name .. "Attachment") or desc.Part0:FindFirstChild(desc.Name .. "RigAttachment")
-					
-			if (Settings.JointConfiguration[desc.Name].Properties) then
-				for property,value in pairs(Settings.JointConfiguration[desc.Name].Properties) do
-					Joint[property] = value
-				end
-			end
-					
-			if (Attachment0 and Attachment1) then
-				Joint.Attachment0 = Attachment0
-				Joint.Attachment1 = Attachment1
-				Joint.Parent = desc.Parent
-				desc:Destroy()
-			end
-		elseif (desc:IsA("Attachment")) then
-			desc.Axis = Vector3.new(0, 1, 0)
-			desc.SecondaryAxis = Vector3.new(0, 0, 1)
-			desc.Rotation = Vector3.new(0, 0, 0)
-		end
-	end	
-end
-
-local function Jump(NPC, Point)
-	-- Jumps if the point requires a jump or the move to position is higher than the NPC's position
-	
-	local Hum = NPC.Hum
-	
-	if Point.Action == Enum.PathWaypointAction.Jump then
-		Hum.Jump = true
-	end
-								
-	Core.NewThread(function()
-		wait(Settings.JumpDelay)
-		if Core.Round(Hum.WalkToPoint.Y) > Core.Round(NPC.Root.Position.Y) then
-			Hum.Jump = true
-		end
-	end)	
-end
-
-	-- AI: Players
 local function Attack(NPC)
 	if NPC.Target and Core.Mag(NPC.Root, NPC.Target) < Settings.AttackDist then
 		NPC.Hum:MoveTo(NPC.Root.Position)		
-		NPC.ExplodeAnim:Play()
-		
-		local Con
-		Con = NPC.ExplodeAnim:GetMarkerReachedSignal("StartExplosion"):Connect(function()
-			Explode.Start({
-				["Position"] = NPC.Root.Position,
-				["NPC"] = NPC.Char
-			})
-			Con:Disconnect()
-		end)
-		
-		NPC.ExplodeAnim.Stopped:Wait()		
+		InitiateExplode(NPC)
 	end	
 end
 
@@ -154,8 +54,8 @@ local function Follow(NPC)
 		for i,Point in ipairs(Waypoints) do	
 			
 			-- Jumps if needed, moves to point, restarts function if needed		
-			Jump(NPC, Point)		
-			CheckFront(NPC)			
+			NpcModule.Jump(NPC, Point, Settings)		
+			NpcModule.CheckFront(NPC, Settings)			
 			Hum:MoveTo(Point.Position)
 			
 			local Timeout = Hum.MoveToFinished:Wait()
@@ -165,13 +65,13 @@ local function Follow(NPC)
 				break
 			end
 
-			if NPC and NPC.Root and NPC.Target and CheckSight(NPC, NPC.Target) then
+			if NPC and NPC.Root and NPC.Target and NpcModule.CheckSight(NPC, NPC.Target, Settings) then
 				repeat
 					Attack(NPC)
-					CheckFront(NPC)
+					NpcModule.CheckFront(NPC, Settings)
 					Hum:MoveTo(CurrentTarget.Position)
 					wait(Settings.UpdateDelay)
-				until not NPC.Target or not NPC.Root or CurrentTarget ~= NPC.Target or not CheckSight(NPC, NPC.Target) or Hum.Health == 0 or NPC.Target.Parent.Humanoid.Health == 0
+				until not NPC.Target or not NPC.Root or CurrentTarget ~= NPC.Target or not NpcModule.CheckSight(NPC, NPC.Target, Settings) or Hum.Health == 0 or NPC.Target.Parent.Humanoid.Health == 0
 				break
 			end			
 			
@@ -223,36 +123,18 @@ local function Initiate(TempChar)
 		------------------------------------			
 		
 		table.remove(NPCs, table.find(NPCs, NPC))		
-		Ragdoll(NPC.Char)			
+		InitiateExplode(NPC)		
 		wait(Settings.DespawnDelay)		
 		NPC.Char:Destroy()
 	end)	
 	
-	-- Health bar
-	NPC.Hum.HealthChanged:Connect(function()			
-		local Health = NPC.Hum.Health		
-		if Health < 0 then
-			Health = 0
-		end
-		
-		local Perc = Health/NPC.Hum.MaxHealth
-		local Frame = NPC.Char.Head.Health.Frame
-		
-		Frame.Size = UDim2.new(Perc, 0, 1, 0)
-		if Perc >= 0.5 then
-			Frame.Frame.BackgroundColor3 = Settings.HealthBar.Yellow:lerp(Settings.HealthBar.Green, Perc)
-		else
-			Frame.Frame.BackgroundColor3 = Settings.HealthBar.Red:lerp(Settings.HealthBar.Yellow, Perc)
-		end
-	end)	
-
-	-- Ensures sever has 100% control over the NPC to ensure minimum client control
-	for _,Part in pairs(NPC.Char:GetDescendants()) do
-		if Part:IsA("BasePart") and Part:CanSetNetworkOwnership() then
-			Part:SetNetworkOwner(nil)
-		end
-	end	
+	NPC.Hum.HealthChanged:Connect(function(Health)
+		NpcModule.UpdateHealthBar(Health, NPC, Settings)
+	end)
 	
+	NpcModule.SetNet(NPC)	
+	NpcModule.CreateRagdoll(NPC.Char, Settings)
+		
 	-- Main
 	while wait(Settings.UpdateDelay) do
 		if NPC.Hum.Health == 0 then
@@ -266,49 +148,7 @@ local function Initiate(TempChar)
 	
 end
 
-Core.NewThread(function() -- Locate
-	while wait(Settings.UpdateDelay) do		
-		for _,NPC in pairs(NPCs) do		
-			
-			local Dist = Settings.DetectionDist
-			local Target, Pot, See = nil, {}, {}
-			
-			-- Adds potential players as targets if within range
-			for _,p in pairs(game.Players:GetPlayers()) do
-				local Char = p.Character
-				if Char then
-					local Root = Char:FindFirstChild("HumanoidRootPart")
-					if Root then
-						local CurrentDist = Core.Mag(Root, NPC.Root)
-						if Char.Humanoid.Health > 0 and CurrentDist < Dist then
-							table.insert(Pot, Root)
-						end
-					end
-				end
-			end				
-			
-			-- Prioritizes those in its perspective
-			for _,v in ipairs(Pot) do
-				if CheckPov(NPC, v) then
-					table.insert(See, v) 
-				elseif #See == 0 then
-					Target = v
-				end
-			end
-			
-			-- Prioritizes those closest to it
-			for i,v in ipairs(See) do
-				local TempDist = Core.Mag(NPC.Root, v)
-				if TempDist < Dist then
-					Dist = TempDist
-					Target = v
-				end
-			end
-			
-			NPC.Target = Target				
-		end				
-	end
-end)
+Core.NewThread(NpcModule.Locate, NPCs, Settings)
 
 -- // Defaults \\ --
 

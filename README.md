@@ -3,6 +3,7 @@
 ## Table of Contents
 
 #### Release
+- [1.3.2](https://github.com/Vex87/NPC-System/blob/master/README.md#132)
 - [1.3.1](https://github.com/Vex87/NPC-System/blob/master/README.md#131)
 - [1.3.0](https://github.com/Vex87/NPC-System/blob/master/README.md#130)
 - [1.2.1](https://github.com/Vex87/NPC-System/blob/master/README.md#121)
@@ -18,6 +19,30 @@
 #### Initialize
 - [0.1.0](https://github.com/Vex87/NPC-System/blob/master/README.md#010)
 - [0.0.0](https://github.com/Vex87/NPC-System/blob/master/README.md#000)
+
+## 1.3.2
+#### Changes
+- Made blast pressure 50% less powerful
+- Created an NPC module to reduce lines of code.
+
+> Before
+Explosive: 321
+Giant: 497
+Puncher: 429
+Sound: 30
+NPC: 0
+TOTAL: 1277
+
+> After
+Explosive: 161 (-50%)
+Giant: 282 (-43%)
+Puncher: 232 (-46%)
+Sound: 29 (-3%)
+NPC: 217 (+)
+TOTAL: 921 (-27%)
+
+> Net
+-356 (-27%)
 
 ## 1.3.1
 #### Additions

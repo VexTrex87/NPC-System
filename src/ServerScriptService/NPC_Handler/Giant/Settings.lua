@@ -28,7 +28,7 @@ local Settings = {
 		yVelocity = 50,
 		InAirDur = 0.3,
 		
-		Chance = 1, -- 1 to n chance of winning			
+		Chance = 3, -- 1 to n chance of throwing			
 		CarriedCollisionGroupId = 2,
 		PosOffset = CFrame.new(0, -0.7, 1),
 		RotOffset = CFrame.fromEulerAnglesXYZ(math.rad(90), 0, math.rad(180))		

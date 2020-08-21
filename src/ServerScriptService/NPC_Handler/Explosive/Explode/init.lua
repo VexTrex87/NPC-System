@@ -90,7 +90,7 @@ Explode.Start = function(OldInfo)
 		MaxDamage = 200,	
 		BlastRadius = 15,	
 		DestroyJointRadiusPercent = 0,
-		BlastPressure = 1000000,
+		BlastPressure = 500000,
 		ExplosionType = Enum.ExplosionType.NoCraters,
 		
 		NewExplosion = nil,	
