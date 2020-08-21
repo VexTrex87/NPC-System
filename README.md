@@ -3,6 +3,7 @@
 ## Table of Contents
 
 #### Release
+- [1.3.1](https://github.com/Vex87/NPC-System/blob/master/README.md#131)
 - [1.3.0](https://github.com/Vex87/NPC-System/blob/master/README.md#130)
 - [1.2.1](https://github.com/Vex87/NPC-System/blob/master/README.md#121)
 - [1.2.0](https://github.com/Vex87/NPC-System/blob/master/README.md#120)
@@ -17,6 +18,15 @@
 #### Initialize
 - [0.1.0](https://github.com/Vex87/NPC-System/blob/master/README.md#010)
 - [0.0.0](https://github.com/Vex87/NPC-System/blob/master/README.md#000)
+
+## 1.3.1
+#### Additions
+- Added in sounds for the throwing system.
+- Made the player ragdoll when throwned and in the air.
+#### Changes
+- Made the animations in the throwing system more smooth. Removed the carrying part.
+#### Deletions
+- Archived weapons due to it causing the Giant NPC to bug out when throwing. #5
 
 ## 1.3.0
 #### Additions
