@@ -9,27 +9,46 @@ local Settings = {
 	PovY = 5,
 	TimeoutDist = 20,
 	LineOfSightDist = 40,
-	TargetLineOfSightDist = 10,
 	PovIgnore = {},
-	PointDist = 3,
-	TurnDuration = 0.5,
 	
 	SpacingDist = 3,
 	WalkSpeed = 8,
 	AttemptSpacingDuration = 5,
 	
-	AttackDelay = 2,
 	AttackDist = 15,
-	
-	Sounds = {
-		DeathSpeed_Min = 0.9,
-		DeathSpeed_Max = 1.1,
-		DeathPitch_Min = 0.85,
-		DeathPitch_Max = 1.05,
-	},
 	
 	Humanoid = {
 		["WalkSpeed"] = 12
+	},
+	
+	ExplosionInfo = {
+		ExplosionModel = game.ServerStorage.Effects.Explosion,				
+		Parent = workspace.Debris,
+		Position = Vector3.new(0, 0, 0),
+		ShakeDist = 20,
+		Size = 200,	
+		Duration = 1,
+		FadeDuration = 0.8,
+		DespawnDelay = 0.5,
+		
+		MaxDamage = 200,	
+		BlastRadius = 15,	
+		DestroyJointRadiusPercent = 0,
+		BlastPressure = 500000,
+		ExplosionType = Enum.ExplosionType.NoCraters,
+		
+		NewExplosion = nil,	
+		NPC = nil,			
+		
+		ExplodeTweenInfo = {
+			EasingStyle = Enum.EasingStyle.Exponential,
+			EasingDirection = Enum.EasingDirection.Out,
+		},
+		
+		FadeTweenInfo = {
+			EasingStyle = Enum.EasingStyle.Exponential,
+			EasingDirection = Enum.EasingDirection.In,
+		}		
 	},
 	
 	HealthBar = {

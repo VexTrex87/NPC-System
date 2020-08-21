@@ -3,6 +3,7 @@
 ## Table of Contents
 
 #### Release
+- [1.3.4](https://github.com/Vex87/NPC-System/blob/master/README.md#134)
 - [1.3.3](https://github.com/Vex87/NPC-System/blob/master/README.md#133)
 - [1.3.2](https://github.com/Vex87/NPC-System/blob/master/README.md#132)
 - [1.3.1](https://github.com/Vex87/NPC-System/blob/master/README.md#131)
@@ -20,6 +21,10 @@
 #### Initialize
 - [0.1.0](https://github.com/Vex87/NPC-System/blob/master/README.md#010)
 - [0.0.0](https://github.com/Vex87/NPC-System/blob/master/README.md#000)
+
+## 1.3.4
+#### Changes
+- Cleaned up some settings that weren't in use.
 
 ## 1.3.3
 #### Changes

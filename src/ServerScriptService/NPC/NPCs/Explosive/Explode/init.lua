@@ -1,7 +1,8 @@
 local Explode = {}
 local Debris = game:GetService("Debris")
 local TweenService = game:GetService("TweenService")
-local Core = require(5584659207)
+local Settings = require(script.Parent.Settings)
+local Core = require(game.ServerScriptService.Core)
 
 local function TweenScale(Info)
 	local Model = Info.NewExplosion
@@ -77,35 +78,7 @@ end
 
 Explode.Start = function(OldInfo)
 	
-	local Info = {
-		ExplosionModel = game.ServerStorage.Effects.Explosion,				
-		Parent = workspace.Debris,
-		Position = Vector3.new(0, 0, 0),
-		ShakeDist = 20,
-		Size = 200,	
-		Duration = 1,
-		FadeDuration = 0.8,
-		DespawnDelay = 0.5,
-		
-		MaxDamage = 200,	
-		BlastRadius = 15,	
-		DestroyJointRadiusPercent = 0,
-		BlastPressure = 500000,
-		ExplosionType = Enum.ExplosionType.NoCraters,
-		
-		NewExplosion = nil,	
-		NPC = nil,			
-		
-		ExplodeTweenInfo = {
-			EasingStyle = Enum.EasingStyle.Exponential,
-			EasingDirection = Enum.EasingDirection.Out,
-		},
-		
-		FadeTweenInfo = {
-			EasingStyle = Enum.EasingStyle.Exponential,
-			EasingDirection = Enum.EasingDirection.In,
-		}		
-	}
+	local Info = Core.CloneTable(Settings.ExplosionInfo)
 	
 	if OldInfo then
 		for i,v in pairs(OldInfo) do

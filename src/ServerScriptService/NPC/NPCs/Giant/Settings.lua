@@ -28,17 +28,10 @@ local Settings = {
 		yVelocity = 50,
 		InAirDur = 0.3,
 		
-		Chance = 3, -- 1 to n chance of throwing			
+		Chance = 1, -- 1 to n chance of throwing			
 		CarriedCollisionGroupId = 2,
 		PosOffset = CFrame.new(0, -0.7, 1),
 		RotOffset = CFrame.fromEulerAnglesXYZ(math.rad(90), 0, math.rad(180))		
-	},
-	
-	Sounds = {
-		DeathSpeed_Min = 0.9,
-		DeathSpeed_Max = 1.1,
-		DeathPitch_Min = 0.85,
-		DeathPitch_Max = 1.05,
 	},
 	
 	Humanoid = {

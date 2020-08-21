@@ -1,5 +1,4 @@
 local Core = {}
-local ThreadValue = game.ReplicatedStorage.Values.Threads
 
 function Core.Round(n, Places)
 	if not Places then
@@ -65,12 +64,19 @@ function Core.Mag(Start, End)
 end
 
 function Core.NewThread(func,...)
-	local a = coroutine.wrap(function(...)
-		ThreadValue.Value = ThreadValue.Value + 1
-		func(...)
-		ThreadValue.Value = ThreadValue.Value - 1
-	end)
+	local a = coroutine.wrap(func)
 	a(...)
+end
+
+function Core.CloneTable(OriginalTable)
+	local copy = {}
+	for k, v in pairs(OriginalTable) do
+		if type(v) == "table" then
+			v = Core.CloneTable(v)
+		end
+		copy[k] = v
+	end
+	return copy
 end
 
 function Core.TableRemove(Table, Value, RemoveCount)		

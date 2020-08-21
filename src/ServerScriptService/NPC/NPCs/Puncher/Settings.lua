@@ -20,13 +20,6 @@ local Settings = {
 	MaxDamage = 15,
 	AttackDelay = 2,
 	
-	Sounds = {
-		DeathSpeed_Min = 0.9,
-		DeathSpeed_Max = 1.1,
-		DeathPitch_Min = 0.85,
-		DeathPitch_Max = 1.05,
-	},
-	
 	Humanoid = {
 		["WalkSpeed"] = 12
 	},
