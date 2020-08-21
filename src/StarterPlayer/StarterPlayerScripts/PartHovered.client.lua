@@ -1,7 +1,8 @@
+local UPDATE_DELAY = 0.5
 local Mouse = game.Players.LocalPlayer:GetMouse()
 local PreviousFrame
 
-Mouse.Move:Connect(function()	
+while wait(UPDATE_DELAY) do
 	local Target = Mouse.Target
 	
 	if Target and Target.Parent ~= PreviousFrame and PreviousFrame then
@@ -12,4 +13,4 @@ Mouse.Move:Connect(function()
 		PreviousFrame = Target.Parent.Head.Health.Frame
 		PreviousFrame.Visible = true
 	end	
-end)
+end
