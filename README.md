@@ -3,6 +3,9 @@
 ## Table of Contents
 
 #### Release
+- [1.3.0](https://github.com/Vex87/NPC-System/blob/master/README.md#130)
+- [1.2.1](https://github.com/Vex87/NPC-System/blob/master/README.md#121)
+- [1.2.0](https://github.com/Vex87/NPC-System/blob/master/README.md#120)
 - [1.1.3](https://github.com/Vex87/NPC-System/blob/master/README.md#113)
 - [1.1.2](https://github.com/Vex87/NPC-System/blob/master/README.md#112)
 - [1.1.1](https://github.com/Vex87/NPC-System/blob/master/README.md#111)
@@ -14,6 +17,26 @@
 #### Initialize
 - [0.1.0](https://github.com/Vex87/NPC-System/blob/master/README.md#010)
 - [0.0.0](https://github.com/Vex87/NPC-System/blob/master/README.md#000)
+
+## 1.3.0
+#### Additions
+- Added Giant NPC
+#### Changes
+- Made explosive NPC not target a non-humanoid target
+
+## 1.2.1
+#### Changes
+- Renamed "Dummy" to "Puncher"
+- Renamed "Bumi" to "Explosive"
+
+## 1.2.0
+#### Additions
+- Added in the explosive NPC.
+- Added in a Core module to combine the NewThread, Mag, and Round functions.
+#### Changes
+- Made the sound handler conditioned if the NPC should receive the sound.
+- Organized the place a bit.
+- Made the Quick Stats updated every 0.5 sec.
 
 ## 1.1.3
 #### Changes
