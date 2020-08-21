@@ -66,13 +66,33 @@ local function CheckFront(NPC)
 	end	
 end
 
-	-- AI: Helper
-local function Ragdoll(Char)
+-- AI: Helper
+
+local function StartRagdoll(Char)			
+	for _,desc in pairs(Char:GetDescendants()) do
+		if (desc:IsA("Motor6D") and desc.Parent:FindFirstChildWhichIsA("BallSocketConstraint") and Settings.JointConfiguration[desc.Name]) then
+			desc.Parent:FindFirstChildWhichIsA("BallSocketConstraint").Enabled = true
+			desc.Enabled = false
+		end
+	end	
+end
+
+local function StopRagdoll(Char)			
+	for _,desc in pairs(Char:GetDescendants()) do
+		if (desc:IsA("Motor6D") and desc.Parent:FindFirstChildWhichIsA("BallSocketConstraint") and Settings.JointConfiguration[desc.Name]) then
+			desc.Enabled = true
+			desc.Parent:FindFirstChildWhichIsA("BallSocketConstraint").Enabled = false
+		end
+	end	
+end
+
+
+local function CreateRagdoll(Char)
 	-- Replaces all Motor6D's with BallSocketsConstraints
 	
-	Char.HumanoidRootPart.Anchored = true
-	Char.HumanoidRootPart.CanCollide = false
-	Char.HumanoidRootPart:BreakJoints()
+	--Char.HumanoidRootPart.Anchored = true
+	--Char.HumanoidRootPart.CanCollide = false
+	--Char.HumanoidRootPart:BreakJoints()
 			
 	for _,desc in pairs(Char:GetDescendants()) do
 		if (desc:IsA("Motor6D") and Settings.JointConfiguration[desc.Name]) then
@@ -90,7 +110,8 @@ local function Ragdoll(Char)
 				Joint.Attachment0 = Attachment0
 				Joint.Attachment1 = Attachment1
 				Joint.Parent = desc.Parent
-				desc:Destroy()
+				Joint.Enabled = false
+				--desc:Destroy()
 			end
 		elseif (desc:IsA("Attachment")) then
 			desc.Axis = Vector3.new(0, 1, 0)
@@ -123,51 +144,46 @@ local function Attack(NPC)
 		
 		local LeftHand = NPC.Char.LeftHand
 		
+		local BodyVelocity = Instance.new("BodyVelocity")
+		BodyVelocity.Velocity = NPC.Root.CFrame.LookVector * Settings.Throwing.xVelocity + Vector3.new(0, Settings.Throwing.yVelocity, 0)
+		
 		local PreviousCollisionGroupId = NPC.Target.CollisionGroupId
 		for _,Part in pairs(Core.Get(NPC.Target.Parent, "BasePart")) do
 			Part.CollisionGroupId = Settings.Throwing.CarriedCollisionGroupId
-		end	
+		end		
 		
-		-- Teleport target to root
+		NPC.PickUpAnim:Play(0.1, 1, 0.8)		
+		wait(NPC.PickUpAnim.Length / 0.8 / 2)
 		
+		NPC.Target.Parent.Humanoid:ChangeState(Enum.HumanoidStateType.Freefall, true)
+		NPC.Root.PickUp:Play()
 		NPC.Target.CFrame = LeftHand.CFrame * Settings.Throwing.PosOffset * Settings.Throwing.RotOffset
+		
 		local Weld = Instance.new("WeldConstraint")
 		Weld.Part0 = LeftHand
 		Weld.Part1 = NPC.Target
 		Weld.Parent = LeftHand
 		
-		-- Create body velocity physics
-		
-		local BodyVelocity = Instance.new("BodyVelocity")
-		BodyVelocity.Velocity = NPC.Root.CFrame.LookVector * Settings.Throwing.xVelocity + Vector3.new(0, Settings.Throwing.yVelocity, 0)
-		
-		-- Start animations	
-		
-		NPC.PickUpAnim:Play()	
-		wait(Settings.Throwing.PickupDur)
-	
-		NPC.CarryAnim:Play()		
-		wait(Settings.Throwing.CarryDur)
-		NPC.CarryAnim:Stop()
-		
-		NPC.ThrowAnim:Play()	
-		NPC.ThrowAnim:GetMarkerReachedSignal("Throw"):Wait()
-		
-		-- Run body velocity physics	
-		
+		NPC.ThrowAnim:Play(NPC.PickUpAnim.Length / 0.8 / 2, 2)	
+		NPC.ThrowAnim:GetMarkerReachedSignal("Throw"):Wait()	
+		NPC.Root.Throw:Play()
 		Weld:Destroy()	
-		NPC.Target.Parent.Humanoid:ChangeState(Enum.HumanoidStateType.Freefall, true)
-		
+
 		BodyVelocity.Parent = NPC.Target
+		StartRagdoll(NPC.Target.Parent)
 		wait(Settings.Throwing.InAirDur)
 		BodyVelocity:Destroy()
-			
-		-- Turn on collisions	
-		
+				
 		for _,Part in pairs(Core.Get(NPC.Target.Parent, "BasePart")) do
 			Part.CollisionGroupId = PreviousCollisionGroupId
-		end		
-
+		end	
+		
+		local Char = NPC.Target.Parent
+		
+		wait(0.5)		
+		
+		StopRagdoll(Char)
+		
 	elseif NPC.Target and Core.Mag(NPC.Root, NPC.Target) < Settings.AttackDist then
 		NPC.PunchAnim:Play()
 		NPC.Root.Punch:Play()
@@ -343,7 +359,7 @@ local function Initiate(TempChar)
 		------------------------------------			
 		
 		table.remove(NPCs, table.find(NPCs, NPC))		
-		Ragdoll(NPC.Char)			
+		StartRagdoll(NPC.Char)			
 		wait(Settings.DespawnDelay)		
 		NPC.Char:Destroy()
 	end)	
@@ -396,7 +412,22 @@ local function Initiate(TempChar)
 	local Sounds = script.PunchSounds:GetChildren()	
 	local RandomSound = Sounds[math.random(#Sounds)]:Clone()
 	RandomSound.Name = "Punch"
-	RandomSound.Parent = NPC.Root	
+	RandomSound.Parent = NPC.Root		
+	
+	-- Throwing sounds
+	
+	for _,Sound in pairs(script.Sounds:GetChildren()) do
+		Sound:Clone().Parent = NPC.Root
+	end
+	
+	-- Set collisions
+	for _,Part in pairs(TempChar:GetDescendants()) do
+		if Part:IsA("BasePart") then
+			Part.CollisionGroupId = Settings.CollisionGroupId
+		end
+	end
+	
+	CreateRagdoll(NPC.Char)
 	
 	-- Main
 	while wait(Settings.UpdateDelay) do

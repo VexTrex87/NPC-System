@@ -21,18 +21,18 @@ local Settings = {
 	AttackDelay = 3,
 	AttackDist = 3,
 	
+	CollisionGroupId = 1,
+	
 	Throwing = {
 		xVelocity = 100,
 		yVelocity = 50,
 		InAirDur = 0.3,
-		PickupDur = 0.5,
-		CarryDur = 2,
 		
-		Chance = 2, -- 1 to n chance of winning				
-		CarriedCollisionGroupId = 1,
+		Chance = 1, -- 1 to n chance of winning			
+		CarriedCollisionGroupId = 2,
 		PosOffset = CFrame.new(0, -0.7, 1),
 		RotOffset = CFrame.fromEulerAnglesXYZ(math.rad(90), 0, math.rad(180))		
-	}	,
+	},
 	
 	Sounds = {
 		DeathSpeed_Min = 0.9,
