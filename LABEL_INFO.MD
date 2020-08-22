@@ -1,9 +1,9 @@
 # Label Info
 
-- [Type](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.md#type)
-- [Status](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.md#status)
-- [Priorities](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.md#priorities)
-- [Durations](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.md#durations)
+- [Type](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.MD#type-no-specific-order)
+- [Status](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.MD#status)
+- [Priorities](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.MD#priorities)
+- [Durations](https://github.com/Vex87/NPC-System/blob/master/LABEL_INFO.MD#durations)
 
 ## Type *(No Specific Order)*
 
