@@ -1,4 +1,4 @@
-# Commission requested Alexander (Themkboy0609#7279).
+# Commission requested Alexander (Themkboy0609#7279)
 
 ## NPC's:
 - NPC's target players as priority, then a non-humanoid object with health.
